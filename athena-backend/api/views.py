@@ -234,24 +234,36 @@ def delete_quiz(request, quiz_id):
 
 @api_view(['POST'])
 def update_profile(request):
-    user_id = request.data.get('user_id')
-    user = User.objects.get(id=user_id)
+    try:
+        user_id = request.data.get('user_id')
+        user = User.objects.get(id=user_id)
 
-    user.first_name = request.data.get('name', user.first_name)
-    user.email = request.data.get('email', user.email)
-    user.save()
+        # ✨ UPDATED: Tracks and implements frontend username updates safely
+        new_username = request.data.get('username', user.username)
+        
+        # Validation safety check to make sure someone doesn't steal a taken username
+        if new_username != user.username and User.objects.filter(username=new_username).exists():
+            return Response({"error": "That username is already taken!"}, status=400)
+            
+        user.username = new_username
+        user.first_name = request.data.get('name', user.first_name)
+        user.email = request.data.get('email', user.email)
+        user.save()
 
-    profile, _ = UserProfile.objects.get_or_create(user=user)
-    profile.bio = request.data.get('bio', profile.bio)
-    profile.avatar = request.data.get('avatar', profile.avatar) 
-    profile.save()
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.bio = request.data.get('bio', profile.bio)
+        profile.avatar = request.data.get('avatar', profile.avatar) 
+        profile.save()
 
-    return Response({
-        "message": "Profile saved permanently!",
-        "name": user.first_name,
-        "avatar": profile.avatar,
-        "bio": profile.bio
-    })
+        return Response({
+            "message": "Profile saved permanently!",
+            "name": user.first_name,
+            "username": user.username,
+            "avatar": profile.avatar,
+            "bio": profile.bio
+        })
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
 
 @api_view(['POST'])
 def change_password(request):
