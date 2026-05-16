@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
+import Swal from 'sweetalert2'; // ✨ 1. IMPORT THE GLOW-UP POPUP
 import robotImg from '../assets/Welcome.png'; 
 
 const SignupPage = () => {
-  const [username, setUsername] = useState(''); // NEW!
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const navigate = useNavigate();
 
-  // --- NEW: Sends data to Django to create the account! ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -24,26 +24,48 @@ const SignupPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Account created successfully! You can now log in.");
-        navigate('/login'); 
+        // ✨ 2. BEAUTIFUL SUCCESS POPUP
+        Swal.fire({
+          title: 'Account Created!',
+          text: 'Welcome to Athena! You can now log in.',
+          icon: 'success',
+          confirmButtonColor: '#135cce',
+          customClass: {
+            popup: 'rounded-5' // Matches your card corners!
+          }
+        }).then(() => {
+          navigate('/login'); 
+        });
+
       } else {
-        alert(data.error || "Something went wrong. Username might be taken.");
+        // ✨ 3. BEAUTIFUL ERROR POPUP
+        Swal.fire({
+          title: 'Oops...',
+          text: data.error || "Something went wrong. Username might be taken.",
+          icon: 'error',
+          confirmButtonColor: '#135cce'
+        });
       }
     } catch (error) {
       console.error("Registration error:", error);
-      alert("Failed to connect to the server.");
+      // ✨ 4. BEAUTIFUL SERVER ERROR POPUP
+      Swal.fire({
+        title: 'Connection Error',
+        text: 'Failed to connect to the server.',
+        icon: 'warning',
+        confirmButtonColor: '#135cce'
+      });
     }
   };
 
   return (
+    // ... rest of your UI remains exactly the same!
     <div className="vh-100 d-flex align-items-center justify-content-center bg-light" style={{ overflow: 'hidden' }}>
       <Container>
         <Row className="justify-content-center">
           <Col lg={10} xl={9}>
             <Card className="border-0 shadow-lg rounded-5 overflow-hidden">
               <Row className="g-0 flex-row-reverse"> 
-                
-                {/* RIGHT SIDE: The Form */}
                 <Col md={6} className="p-4 p-sm-5 d-flex flex-column justify-content-center bg-white">
                   <div className="text-center mb-4 mt-2">
                     <h2 className="fw-bold text-primary mb-2" style={{ letterSpacing: '1px' }}>Sign Up</h2>
@@ -56,7 +78,6 @@ const SignupPage = () => {
                       <Form.Control type="text" className="py-2 px-3 rounded-4 shadow-sm border-light" value={name} onChange={(e) => setName(e.target.value)} required />
                     </Form.Group>
 
-                    {/* NEW: Username Field */}
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold text-dark">Username<span className="text-danger">*</span></Form.Label>
                       <Form.Control type="text" className="py-2 px-3 rounded-4 shadow-sm border-light" value={username} onChange={(e) => setUsername(e.target.value)} required />
@@ -84,7 +105,6 @@ const SignupPage = () => {
                   </Form>
                 </Col>
 
-                {/* LEFT SIDE: The Robot Image Area */}
                 <Col md={6} className="d-none d-md-flex align-items-center justify-content-center" style={{ backgroundColor: '#135cce', minHeight: '500px' }}>
                   <img 
                     src={robotImg} 
@@ -93,7 +113,6 @@ const SignupPage = () => {
                     style={{ maxHeight: '100%', objectFit: 'contain', animation: 'float 3s ease-in-out infinite' }} 
                   />
                 </Col>
-
               </Row>
             </Card>
           </Col>

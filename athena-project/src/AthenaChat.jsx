@@ -14,7 +14,7 @@ export default function AthenaChat() {
 
         try {
             // This is the Waiter handing the ticket to the Kitchen!
-            const res = await fetch('http://localhost:8000/api/ask-athena/', {
+            const res = await fetch('https://master-athena-final-project.onrender.com/api/ask-athena/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

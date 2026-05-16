@@ -53,7 +53,7 @@ const AiTutor = () => {
             const isLocalId = activeChatId > 1000000000;
             const backendId = isLocalId ? null : activeChatId;
 
-            const response = await fetch('http://localhost:8000/api/ask-athena/', {
+            const response = await fetch('https://master-athena-final-project.onrender.com/api/ask-athena/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
