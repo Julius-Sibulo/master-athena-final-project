@@ -29,9 +29,9 @@ function App() {
       setIsDataLoading(true); 
 
       Promise.all([
-        fetch(`http://localhost:8000/api/lessons/?user_id=${currentUser.id}`).then(res => res.json()),
-        fetch(`http://localhost:8000/api/quizzes/?user_id=${currentUser.id}`).then(res => res.json()),
-        fetch(`http://localhost:8000/api/conversations/?user_id=${currentUser.id}`).then(res => res.json())
+        fetch(`https://master-athena-final-project.onrender.com/api/lessons/?user_id=${currentUser.id}`).then(res => res.json()),
+        fetch(`https://master-athena-final-project.onrender.com/api/quizzes/?user_id=${currentUser.id}`).then(res => res.json()),
+        fetch(`https://master-athena-final-project.onrender.com/api/conversations/?user_id=${currentUser.id}`).then(res => res.json())
       ])
       .then(([lessonsData, quizzesData, convosData]) => {
         setLessons(lessonsData);
@@ -76,7 +76,7 @@ function App() {
 
     // 2. Tell Django to record the activity and update the streak!
     try {
-      const res = await fetch('http://localhost:8000/api/complete-quiz/', {
+      const res = await fetch('https://master-athena-final-project.onrender.com/api/complete-quiz/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUser.id, quiz_id: quizId, score: finalScore })
@@ -99,27 +99,27 @@ function App() {
   const deleteConversation = async (idToDelete) => {
     setConversations(prev => prev.filter(c => c.id !== idToDelete));
     try {
-      await fetch(`http://localhost:8000/api/conversations/${idToDelete}/`, { method: 'DELETE' });
+      await fetch(`https://master-athena-final-project.onrender.com/api/conversations/${idToDelete}/`, { method: 'DELETE' });
     } catch (error) { console.error("Error deleting conversation:", error); }
   };
 
   const deleteLesson = async (idToDelete) => {
     setLessons(prev => prev.filter(l => l.id !== idToDelete));
     try {
-      await fetch(`http://localhost:8000/api/lessons/${idToDelete}/`, { method: 'DELETE' });
+      await fetch(`https://master-athena-final-project.onrender.com/api/lessons/${idToDelete}/`, { method: 'DELETE' });
     } catch (error) { console.error("Error deleting lesson:", error); }
   };
 
   const deleteQuiz = async (idToDelete) => {
     setQuizzes(prev => prev.filter(q => q.id !== idToDelete));
     try {
-      await fetch(`http://localhost:8000/api/quizzes/${idToDelete}/`, { method: 'DELETE' });
+      await fetch(`https://master-athena-final-project.onrender.com/api/quizzes/${idToDelete}/`, { method: 'DELETE' });
     } catch (error) { console.error("Error deleting quiz:", error); }
   };
 
   const generateStandaloneLesson = async (topic) => {
     try {
-      const res = await fetch('http://localhost:8000/api/generate-lesson/', {
+      const res = await fetch('https://master-athena-final-project.onrender.com/api/generate-lesson/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic, user_id: currentUser.id })
@@ -134,7 +134,7 @@ function App() {
 
   const generateStandaloneQuiz = async (topic, numQuestions = 5, difficulty = 'Medium') => {
     try {
-      const res = await fetch('http://localhost:8000/api/generate-quiz/', {
+      const res = await fetch('https://master-athena-final-project.onrender.com/api/generate-quiz/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic, user_id: currentUser.id, num_questions: numQuestions, difficulty })
@@ -151,12 +151,12 @@ function App() {
     
     try {
       const [lessonRes, quizRes] = await Promise.all([
-        fetch('http://localhost:8000/api/generate-lesson/', {
+        fetch('https://master-athena-final-project.onrender.com/api/generate-lesson/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ topic: cleanName, user_id: currentUser.id })
         }),
-        fetch('http://localhost:8000/api/generate-quiz/', {
+        fetch('https://master-athena-final-project.onrender.com/api/generate-quiz/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ topic: cleanName, user_id: currentUser.id, num_questions: numQuestions })
@@ -175,7 +175,7 @@ function App() {
 
   const handleLogin = async (username, password) => {
     try {
-      const response = await fetch('http://localhost:8000/api/login/', {
+      const response = await fetch('https://master-athena-final-project.onrender.com/api/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
