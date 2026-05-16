@@ -69,12 +69,10 @@ function App() {
 
   // --- NEW: ADVANCED QUIZ RECORDING ---
   const markQuizCompleted = async (quizId, finalScore) => {
-    // 1. Instantly update the UI so the card shows the score
     setQuizzes(prev => prev.map(quiz => 
       quiz.id === quizId ? { ...quiz, status: 'Completed', lastScore: finalScore } : quiz
     ));
 
-    // 2. Tell Django to record the activity and update the streak!
     try {
       const res = await fetch('https://master-athena-final-project.onrender.com/api/complete-quiz/', {
         method: 'POST',
@@ -218,7 +216,7 @@ function App() {
   }
 
   return (
-    <Router basename="/athena-project">
+    <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
@@ -234,7 +232,7 @@ function App() {
               addConversation={addConversation} deleteConversation={deleteConversation}
               deleteLesson={deleteLesson} deleteQuiz={deleteQuiz}      
               addMessageToChat={addMessageToChat} 
-              markQuizCompleted={markQuizCompleted} /* <-- Passing it down! */
+              markQuizCompleted={markQuizCompleted}
               onLogout={handleLogout} 
             />
           ) : ( <Navigate to="/" /> )
