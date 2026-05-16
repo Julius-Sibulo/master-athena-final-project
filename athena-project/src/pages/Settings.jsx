@@ -8,6 +8,7 @@ const Settings = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(currentUser?.name || currentUser?.username || '');
+    const [username, setUsername] = useState(currentUser?.username || ''); // NEW: Username state
     const [email, setEmail] = useState(currentUser?.email || '');
     
     const [isLoading, setIsLoading] = useState(false);
@@ -30,23 +31,25 @@ const Settings = () => {
             const reader = new FileReader();
             reader.onloadend = async () => {
                 const base64Avatar = reader.result;
-                await handleSaveChanges(base64Avatar, name, email);
+                await handleSaveChanges(base64Avatar, name, username, email);
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const handleSaveChanges = async (newAvatar = currentUser?.avatar, newName = name, newEmail = email) => {
+    const handleSaveChanges = async (newAvatar = currentUser?.avatar, newName = name, newUsername = username, newEmail = email) => {
         setIsLoading(true);
         setStatusMessage(null);
 
         try {
+            // FIXED: Cleaned up the URL typo!
             const response = await fetch('https://master-athena-final-project.onrender.com/api/update-profile/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: currentUser.id,
                     name: newName,
+                    username: newUsername, // NEW: Sending username to backend
                     email: newEmail,
                     bio: currentUser?.bio || '', 
                     avatar: newAvatar
@@ -58,6 +61,7 @@ const Settings = () => {
             if (response.ok) {
                 updateUser({
                     name: data.name || newName,
+                    username: data.username || newUsername,
                     email: newEmail,
                     avatar: data.avatar || newAvatar
                 });
@@ -94,7 +98,7 @@ const Settings = () => {
         setIsChangingPassword(true);
 
         try {
-            const response = await fetch('https://master-athena-final-project.onrender.com/api/update-profile/', {
+            const response = await fetch('https://master-athena-final-project.onrender.com/api/change-password/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -131,8 +135,8 @@ const Settings = () => {
     };
 
     return (
-        // THE FIX: Strict height lock to banish scrollbars, but content sizes are restored to normal
-        <Container fluid className="p-4 overflow-hidden" style={{ height: 'calc(100vh - 110px)', backgroundColor: '#fcfcfc' }}>
+        // FIXED: overflow-auto replaces overflow-hidden for smart scrolling
+        <Container fluid className="p-4 overflow-auto" style={{ height: 'calc(100vh - 110px)', backgroundColor: '#fcfcfc' }}>
             <div className="mx-auto h-100 d-flex flex-column" style={{ maxWidth: '900px' }}>
                 
                 <div className="d-flex justify-content-between align-items-center mb-3 flex-shrink-0">
@@ -144,8 +148,8 @@ const Settings = () => {
                     )}
                 </div>
 
-                <Card className="border-0 shadow-sm rounded-4 flex-grow-1 overflow-hidden">
-                    {/* p-4 keeps standard padding without taking up excessive screen space */}
+                {/* FIXED: overflow-auto allows the inside card to scroll on small screens */}
+                <Card className="border-0 shadow-sm rounded-4 flex-grow-1 overflow-auto">
                     <Card.Body className="p-4 d-flex flex-column justify-content-between h-100">
                         
                         {/* 1. ACCOUNT OVERVIEW */}
@@ -205,7 +209,7 @@ const Settings = () => {
                                         Edit Details
                                     </Button>
                                 ) : (
-                                    <Button variant="primary" className="rounded-pill px-4 fw-bold" onClick={() => handleSaveChanges(currentUser?.avatar, name, email)} disabled={isLoading}>
+                                    <Button variant="primary" className="rounded-pill px-4 fw-bold" onClick={() => handleSaveChanges(currentUser?.avatar, name, username, email)} disabled={isLoading}>
                                         {isLoading ? 'Saving...' : 'Save Changes'}
                                     </Button>
                                 )}
@@ -218,6 +222,16 @@ const Settings = () => {
                                         <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} className="bg-light border-0 shadow-none" />
                                     ) : (
                                         <span className="fw-bold text-dark">{currentUser?.name || currentUser?.username || 'Not set'}</span>
+                                    )}
+                                </Col>
+
+                                {/* NEW: Username Row */}
+                                <Col sm={4} className="text-muted fw-medium d-flex align-items-center">Username</Col>
+                                <Col sm={8}>
+                                    {isEditing ? (
+                                        <Form.Control type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="bg-light border-0 shadow-none" />
+                                    ) : (
+                                        <span className="fw-bold text-dark">@{currentUser?.username}</span>
                                     )}
                                 </Col>
                                 
@@ -262,6 +276,7 @@ const Settings = () => {
                 </Card>
             </div>
 
+            {/* PASSWORD CHANGE MODAL */}
             <Modal show={showPasswordModal} onHide={closePasswordModal} centered backdrop="static">
                 <Modal.Header closeButton className="border-0 pb-0">
                     <Modal.Title className="fw-bold fs-5">Change Password</Modal.Title>
