@@ -41,7 +41,7 @@ const Settings = () => {
         setStatusMessage(null);
 
         try {
-            const response = await fetch('https://master-athena-final-project.onrender.com/api/register//api/update-profile/', {
+            const response = await fetch('https://master-athena-final-project.onrender.com/api/update-profile/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
