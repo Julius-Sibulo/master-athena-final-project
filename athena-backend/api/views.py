@@ -282,8 +282,6 @@ def complete_quiz(request):
         score = request.data.get('score')
         
         user = User.objects.get(id=user_id)
-        
-        # Boost streak when they finish a quiz
         new_streak = update_streak(user)
         
         return Response({
