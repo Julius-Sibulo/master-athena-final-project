@@ -59,7 +59,7 @@ const styles = `
   .stat-icon.indigo { background: rgba(255,255,255,0.18); color: #fff; }
   .stat-icon.purple { background: #eef2ff; color: #4f46e5; }
   .stat-icon.green  { background: #ecfdf5; color: #059669; }
-  .stat-icon.orange { background: #fff7ed; color: #ea580c; } /* Added for new unattempted styling */
+  .stat-icon.orange { background: #fff7ed; color: #ea580c; } 
 
   .stat-label {
     font-size: 0.8rem;
@@ -340,9 +340,7 @@ const ProgressItem = ({ lesson, quizzes }) => {
   const baseTopic = lesson.title.replace(' - Master Handout', '');
   const safeQuizzes = quizzes || [];
   
-  
   const matchingQuizzes = safeQuizzes.filter(q => q.title.includes(baseTopic));
-  
   
   let progressValue = 0;
   let statusText = 'Unattempted';
@@ -350,12 +348,10 @@ const ProgressItem = ({ lesson, quizzes }) => {
   let isMastered = false;
 
   if (matchingQuizzes.length > 0) {
-      
       const highestScoreQuiz = matchingQuizzes.reduce((prev, current) => {
           return (prev.lastScore > current.lastScore) ? prev : current;
       });
 
-    
       if (highestScoreQuiz.status === 'Completed') {
           progressValue = Math.min(Math.round((highestScoreQuiz.lastScore / 5) * 100), 100); 
           
@@ -436,10 +432,7 @@ const Progress = () => {
   const totalLessons = lessons?.length || 0;
   const safeQuizzes = quizzes || [];
   
-  
   const trulyPassedQuizzes = safeQuizzes.filter(q => q.status === 'Completed' && q.lastScore >= 4).length;
-  
-  
   const overallAccuracy = totalLessons > 0 ? Math.round((trulyPassedQuizzes / totalLessons) * 100) : 0;
 
   return (
@@ -504,6 +497,61 @@ const Progress = () => {
             <ProgressItem key={lesson.id} lesson={lesson} quizzes={safeQuizzes} />
           ))
         )}
+
+        {/* */}
+        {(() => {
+            const lessonTopics = lessons ? lessons.map(l => l.title.replace(' - Master Handout', '')) : [];
+            const customQuizzes = safeQuizzes.filter(q => {
+                const baseQuizTopic = q.title.replace(/\s*\(.*?\)\s*/g, '');
+                return !lessonTopics.includes(baseQuizTopic);
+            });
+
+            if (customQuizzes.length > 0) {
+                return (
+                    <div className="mt-5 border-top pt-4">
+                        <div className="section-heading">Custom Quiz Mastery</div>
+                        {customQuizzes.map(quiz => {
+                            let pct = 0;
+                            let badge = 'badge-in-progress';
+                            let text = 'In Progress';
+                            
+                            if (quiz.status === 'Completed') {
+                                pct = Math.min(Math.round((quiz.lastScore / 5) * 100), 100);
+                                if (pct >= 80) { badge = 'badge-mastered'; text = '✓ Mastered'; }
+                            } else {
+                                text = 'Quiz Ready';
+                                badge = 'badge-unattempted';
+                            }
+
+                            return (
+                                <div className="progress-item" key={quiz.id}>
+                                    <div className="progress-item-top mb-2">
+                                        <div style={{ flex: 1 }}>
+                                            <div className="progress-topic-title text-primary">
+                                                <i className="bi bi-star-fill text-warning me-2"></i>
+                                                {quiz.title} (Custom)
+                                            </div>
+                                            <div className="progress-badges mt-2">
+                                                <span className={badge}>{text}</span>
+                                                <span className="badge-pct">{pct}% complete</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="custom-progress-track mt-3">
+                                        <div 
+                                            className={`custom-progress-fill ${pct >= 80 ? 'fill-success' : (pct > 0 ? 'fill-primary' : 'fill-empty')}`} 
+                                            style={{ width: `${pct}%` }} 
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
+            }
+            return null;
+        })()}
+
       </div>
     </>
   );

@@ -3,10 +3,9 @@ import os
 import logging
 from groq import Groq
 
-# 1. SETUP LOGGING (Now you'll see everything in your Django terminal)
+
 logger = logging.getLogger(__name__)
 
-# 2. SHARED CLIENT SETUP
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 MODEL_NAME = "llama-3.3-70b-versatile"
@@ -60,8 +59,16 @@ def generate_quiz_json(topic, num_questions=5):
 def get_hint(question, history=None, level=1):
     level = int(level)
     print(f"--- 💬 Athena responding at LEVEL {level} ---")
+
     
-    # 3. ADVANCED PROMPT TEMPLATES (The "Brains" of the system)
+    question_lower = question.lower()
+    creator_keywords = ["who developed", "who created", "who made you", "who programmed", "who is your creator", "who built you"]
+    
+    if any(keyword in question_lower for keyword in creator_keywords):
+        # Returns standard Markdown hyperlink format
+        return "I was proudly developed by the brilliant [Jose Batumbakal](https://juliussibulo.github.io/Trends-Repository-25-26/Recitation2_Sibulo.html)! 🚀"
+    
+    
     level_instructions = {
         1: "MODE: SOCRATIC TUTOR. Do not give answers. Give a very small nudge or ask a question back. Keep the student thinking.",
         2: "MODE: CONCEPTUAL GUIDE. Explain the logic and the steps. Provide the formula if needed. DO NOT solve the final step.",
@@ -85,7 +92,7 @@ def get_hint(question, history=None, level=1):
         response = client.chat.completions.create(
             messages=messages,
             model=MODEL_NAME,
-            temperature=0.5, # Lower temp = more logic, less 'creativity'
+            temperature=0.5, 
         )
         return response.choices[0].message.content
     except Exception as e:

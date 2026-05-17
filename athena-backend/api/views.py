@@ -7,9 +7,6 @@ from .serializers import LessonSerializer, QuizSerializer
 from .services import get_hint, generate_full_lesson, generate_quiz_json
 from datetime import date, timedelta
 
-# ==========================================
-# CORE SYSTEMS & AUTH
-# ==========================================
 
 def update_streak(user):
     profile, created = UserProfile.objects.get_or_create(user=user)
@@ -36,6 +33,9 @@ def register_user(request):
 
     if User.objects.filter(username=username).exists():
         return Response({"error": "That username is already taken!"}, status=400)
+    
+    if len(password) < 6:
+        return Response({"error": "Password must be at least 6 characters."})
 
     user = User.objects.create_user(username=username, email=email, password=password, first_name=name)
     UserProfile.objects.create(user=user) 
@@ -62,10 +62,6 @@ def login_user(request):
     else:
         return Response({"error": "Invalid username or password."}, status=401)
 
-
-# ==========================================
-# FETCHING DATA 
-# ==========================================
 
 @api_view(['GET'])
 def get_lessons(request):
@@ -100,10 +96,6 @@ def get_messages(request, conversation_id):
     data = [{"role": m.role, "content": m.content} for m in messages]
     return Response(data)
 
-
-# ==========================================
-# AI GENERATION
-# ==========================================
 
 @api_view(['POST'])
 def generate_lesson(request):
@@ -196,9 +188,6 @@ def ask_athena(request):
         return Response({"error": "Backend crashed! Check the Django terminal."}, status=500)
 
 
-# ==========================================
-# DELETION
-# ==========================================
 
 @api_view(['DELETE'])
 def delete_conversation(request, conversation_id):
@@ -228,9 +217,6 @@ def delete_quiz(request, quiz_id):
         return Response({"error": "Quiz not found."}, status=404)
 
 
-# ==========================================
-# PROFILE & SETTINGS
-# ==========================================
 
 @api_view(['POST'])
 def update_profile(request):
@@ -238,10 +224,10 @@ def update_profile(request):
         user_id = request.data.get('user_id')
         user = User.objects.get(id=user_id)
 
-        # ✨ UPDATED: Tracks and implements frontend username updates safely
+        
         new_username = request.data.get('username', user.username)
         
-        # Validation safety check to make sure someone doesn't steal a taken username
+        
         if new_username != user.username and User.objects.filter(username=new_username).exists():
             return Response({"error": "That username is already taken!"}, status=400)
             
@@ -288,9 +274,6 @@ def change_password(request):
         return Response({"error": "An error occurred while changing password."}, status=500)
 
 
-# ==========================================
-# TRACKING & ANALYTICS
-# ==========================================
 
 @api_view(['POST'])
 def complete_quiz(request):

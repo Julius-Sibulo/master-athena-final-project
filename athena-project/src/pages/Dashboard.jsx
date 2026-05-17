@@ -22,13 +22,29 @@ const Dashboard = ({
   
   const handleSignOut = () => onLogout(); 
 
+  const playNotifSound = () => {
+      
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.play().catch(error => console.log("Audio blocked by browser:", error));
+      setTimeout(() => {
+          alert("You have no new notifications right now!");
+      }, 100);
+  };
+
   return (
     <div className="d-flex vh-100 bg-light" style={{ overflow: 'hidden' }}>
       <Sidebar onLogout={handleSignOut} />
 
       <div className="flex-grow-1 d-flex flex-column" style={{ overflowY: 'auto' }}>
         <div className="d-flex justify-content-end align-items-center p-3 bg-white border-bottom shadow-sm z-1">
-           <i className="bi bi-bell me-4 fs-5 text-muted hover-primary" style={{ cursor: 'pointer' }}></i>
+           
+           {/* ✨ THE UI: Clickable bell with sound and red dot */}
+           <div className="position-relative me-4" style={{ cursor: 'pointer' }} onClick={playNotifSound} title="Notifications">
+               <i className="bi bi-bell fs-5 text-muted hover-primary"></i>
+               <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                   <span className="visually-hidden">New alerts</span>
+               </span>
+           </div>
            
            <div className="d-flex align-items-center me-4">
              <div className="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2 shadow-sm overflow-hidden" style={{width: '35px', height: '35px'}}>

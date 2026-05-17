@@ -376,7 +376,6 @@ const styles = `
   }
 `;
 
-
 const shuffleArray = (array) => {
     return [...array].sort(() => Math.random() - 0.5);
 };
@@ -395,9 +394,8 @@ const Quizzes = () => {
     const [showCustomModal, setShowCustomModal] = useState(false);
     const [customTopic, setCustomTopic] = useState('');
     const [customDiff, setCustomDiff] = useState('Medium');
-    const [customCoverage, setCustomCoverage] = useState(''); 
+    const [customCoverage, setCustomCoverage] = useState('');
 
-    
     const checkIsCorrect = (option, resolvedAnswerText) => {
         if (!resolvedAnswerText) return false;
         return String(option).trim().toLowerCase() === String(resolvedAnswerText).trim().toLowerCase();
@@ -422,7 +420,6 @@ const Quizzes = () => {
             }
 
             if (questionsArray?.length > 0) {
-               
                 const processedQuestions = questionsArray.map(q => {
                     let exactAnswerText = String(q.answer).trim().toLowerCase();
                     
@@ -438,8 +435,8 @@ const Quizzes = () => {
 
                     return {
                         ...q,
-                        resolvedAnswer: exactAnswerText, // Save the bulletproof answer
-                        options: q.options ? shuffleArray([...q.options]) : [] // Jumble the choices!
+                        resolvedAnswer: exactAnswerText,
+                        options: q.options ? shuffleArray([...q.options]) : [] 
                     };
                 });
 
@@ -460,7 +457,6 @@ const Quizzes = () => {
     const handleAnswerSubmit = (option) => {
         setSelectedAnswer(option);
         setTimeout(() => {
-            
             const isCorrect = checkIsCorrect(option, parsedQuestions[currentIndex].resolvedAnswer);
             const finalScore = isCorrect ? score + 1 : score;
             
@@ -471,7 +467,6 @@ const Quizzes = () => {
                 setSelectedAnswer(null);
             } else {
                 setShowResults(true);
-                
                 if (markQuizCompleted) {
                     markQuizCompleted(activeQuiz.id, finalScore);
                 }
@@ -486,12 +481,11 @@ const Quizzes = () => {
         if (!customTopic.trim()) return;
         
         setIsGenerating(true);
-       
         await generateStandaloneQuiz(customTopic, 5, customDiff, customCoverage);
         setIsGenerating(false);
         setShowCustomModal(false);
         setCustomTopic('');
-        setCustomCoverage(''); // Reset
+        setCustomCoverage(''); 
     };
 
     const handleRegenerate = async () => {
@@ -546,7 +540,16 @@ const Quizzes = () => {
                                             <i className={quiz.status === 'Completed' ? "bi bi-arrow-repeat" : "bi bi-play-fill"}></i> 
                                             {quiz.status === 'Completed' ? ' Retake Quiz' : ' Start Quiz'}
                                         </button>
-                                        <button className="btn-delete-quiz" onClick={() => deleteQuiz(quiz.id)}>
+                                        
+                                        {/*  */}
+                                        <button 
+                                            className="btn-delete-quiz" 
+                                            onClick={() => {
+                                                if (window.confirm("Are you sure you want to permanently delete this quiz?")) {
+                                                    deleteQuiz(quiz.id);
+                                                }
+                                            }}
+                                        >
                                             <i className="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -583,7 +586,6 @@ const Quizzes = () => {
                             />
                         </Form.Group>
                         
-                        {/*  */}
                         <Form.Group className="mb-4">
                             <Form.Label className="quiz-q-label">COVERAGE / OUTLINE (OPTIONAL)</Form.Label>
                             <Form.Control 
@@ -638,7 +640,6 @@ const Quizzes = () => {
                                 {parsedQuestions[currentIndex]?.options?.map((option, idx) => {
                                     let cls = 'quiz-option-btn';
                                     if (selectedAnswer) {
-                                        
                                         const isCorrect = checkIsCorrect(option, parsedQuestions[currentIndex].resolvedAnswer);
                                         if (isCorrect) cls += ' correct';
                                         else if (option === selectedAnswer) cls += ' wrong';

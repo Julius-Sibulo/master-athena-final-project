@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
 export default function AthenaChat() {
-    // 1. Set up memory for the input box, the answer, and the loading state
+   
     const [question, setQuestion] = useState('');
     const [response, setResponse] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // 2. The function that talks to Django!
+
     const askAthena = async () => {
         if (!question) return; // Don't send empty questions
         setIsLoading(true);
@@ -19,14 +19,14 @@ export default function AthenaChat() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // We turn our Javascript object into a JSON string
+               
                 body: JSON.stringify({
                     question: question,
-                    level: 1 // Hardcoding Level 1 (Conceptual) for testing
+                    
                 })
             });
 
-            // The Waiter brings back the food!
+          
             const data = await res.json();
             setResponse(data.response);
             
@@ -38,7 +38,6 @@ export default function AthenaChat() {
         }
     };
 
-    // 3. The actual UI on the screen
     return (
         <div className="container mt-5" style={{ maxWidth: '600px' }}>
             <h2>Ask Athena 🦉</h2>
