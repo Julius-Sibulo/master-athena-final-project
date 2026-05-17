@@ -286,6 +286,17 @@ const styles = `
     cursor: default;
   }
 
+  /* ✨ NEW SELECTED STATE */
+  .quiz-option-btn.selected {
+    border-color: #4f46e5;
+    background: #eef2ff;
+    transform: translateX(3px);
+  }
+  .quiz-option-btn.selected .option-letter {
+    background: #4f46e5;
+    color: #fff;
+  }
+
   .quiz-option-btn.correct {
     border-color: #34d399;
     background: #ecfdf5;
@@ -388,7 +399,10 @@ const Quizzes = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [score, setScore] = useState(0);
     const [showResults, setShowResults] = useState(false);
+    
+   
     const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [hasSubmitted, setHasSubmitted] = useState(false);
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [showCustomModal, setShowCustomModal] = useState(false);
@@ -446,32 +460,13 @@ const Quizzes = () => {
                 setScore(0);
                 setShowResults(false);
                 setSelectedAnswer(null);
+                setHasSubmitted(false); // Reset submit state
             } else {
                 alert("This quiz is empty or still generating! Try creating a new one.");
             }
         } catch {
             alert("Sorry, the AI had trouble formatting this quiz's content.");
         }
-    };
-
-    const handleAnswerSubmit = (option) => {
-        setSelectedAnswer(option);
-        setTimeout(() => {
-            const isCorrect = checkIsCorrect(option, parsedQuestions[currentIndex].resolvedAnswer);
-            const finalScore = isCorrect ? score + 1 : score;
-            
-            if (isCorrect) setScore(p => p + 1);
-            
-            if (currentIndex + 1 < parsedQuestions.length) {
-                setCurrentIndex(p => p + 1);
-                setSelectedAnswer(null);
-            } else {
-                setShowResults(true);
-                if (markQuizCompleted) {
-                    markQuizCompleted(activeQuiz.id, finalScore);
-                }
-            }
-        }, 800);
     };
 
     const closeQuiz = () => { setActiveQuiz(null); setParsedQuestions([]); };
@@ -541,7 +536,6 @@ const Quizzes = () => {
                                             {quiz.status === 'Completed' ? ' Retake Quiz' : ' Start Quiz'}
                                         </button>
                                         
-                                        {/*  */}
                                         <button 
                                             className="btn-delete-quiz" 
                                             onClick={() => {
@@ -639,23 +633,67 @@ const Quizzes = () => {
                             <div>
                                 {parsedQuestions[currentIndex]?.options?.map((option, idx) => {
                                     let cls = 'quiz-option-btn';
-                                    if (selectedAnswer) {
+                                    
+                                    // ✨ NEW HIGHLIGHTING LOGIC
+                                    if (hasSubmitted) {
                                         const isCorrect = checkIsCorrect(option, parsedQuestions[currentIndex].resolvedAnswer);
                                         if (isCorrect) cls += ' correct';
                                         else if (option === selectedAnswer) cls += ' wrong';
+                                    } else if (option === selectedAnswer) {
+                                        cls += ' selected';
                                     }
+
                                     return (
                                         <button
                                             key={idx}
                                             className={cls}
-                                            onClick={() => !selectedAnswer && handleAnswerSubmit(option)}
-                                            disabled={selectedAnswer !== null}
+                                            onClick={() => !hasSubmitted && setSelectedAnswer(option)}
+                                            disabled={hasSubmitted}
                                         >
                                             <span className="option-letter">{String.fromCharCode(65 + idx)}</span>
                                             {option}
                                         </button>
                                     );
                                 })}
+                            </div>
+
+                            {/* ✨ NEW: SUBMIT / NEXT CONTROLS */}
+                            <div className="d-flex justify-content-end mt-4">
+                                {!hasSubmitted ? (
+                                    <button 
+                                        className="btn-start-quiz m-0" 
+                                        style={{ width: 'auto', padding: '0.6rem 2.5rem' }}
+                                        disabled={!selectedAnswer}
+                                        onClick={() => {
+                                            setHasSubmitted(true);
+                                            if (checkIsCorrect(selectedAnswer, parsedQuestions[currentIndex].resolvedAnswer)) {
+                                                setScore(p => p + 1);
+                                            }
+                                        }}
+                                    >
+                                        Submit Answer
+                                    </button>
+                                ) : (
+                                    <button 
+                                        className="btn-start-quiz m-0" 
+                                        style={{ width: 'auto', padding: '0.6rem 2.5rem', background: '#10b981' }}
+                                        onClick={() => {
+                                            if (currentIndex + 1 < parsedQuestions.length) {
+                                                setCurrentIndex(p => p + 1);
+                                                setSelectedAnswer(null);
+                                                setHasSubmitted(false);
+                                            } else {
+                                                setShowResults(true);
+                                                if (markQuizCompleted) {
+                                                    const finalScore = checkIsCorrect(selectedAnswer, parsedQuestions[currentIndex].resolvedAnswer) ? score + 1 : score;
+                                                    markQuizCompleted(activeQuiz.id, finalScore);
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        {currentIndex + 1 < parsedQuestions.length ? 'Next Question' : 'Finish Quiz'} <i className="bi bi-arrow-right ms-2"></i>
+                                    </button>
+                                )}
                             </div>
                         </>
                     ) : (

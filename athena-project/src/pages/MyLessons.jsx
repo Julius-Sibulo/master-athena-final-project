@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Row, Col, Modal } from 'react-bootstrap';
+import { Row, Col, Modal, Spinner } from 'react-bootstrap'; 
 import { useOutletContext, useNavigate } from 'react-router-dom';
 
 const styles = `
@@ -259,7 +259,6 @@ const styles = `
     line-height: 1.8;
   }
 
-  /* Formatting the AI's markdown inside the modal */
   .lesson-modal .modal-body h1, 
   .lesson-modal .modal-body h2, 
   .lesson-modal .modal-body h3 {
@@ -319,36 +318,72 @@ const styles = `
     transition: background 0.18s;
   }
 
-  .btn-modal-quiz:hover {
+  .btn-modal-quiz:hover:not(:disabled) {
     background: #3730a3;
+  }
+
+  .btn-modal-quiz:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
 `;
 
 const MyLessons = () => {
-  const { lessons, deleteLesson } = useOutletContext();
+  const { lessons, deleteLesson, quizzes, generateStandaloneQuiz } = useOutletContext();
   const navigate = useNavigate();
 
   const [showModal, setShowModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
   const handleOpenLesson = (lesson) => {
     setSelectedLesson(lesson);
     setShowModal(true);
   };
 
-  // Helper to format the real Django timestamp
   const formatDate = (dateString) => {
     if (!dateString) return "Recently Added";
     const date = new Date(dateString);
     return isNaN(date.getTime()) ? "Recently Added" : date.toLocaleDateString();
   };
 
-  // Helper to safely render the AI's markdown text to real HTML
   const createMarkup = (htmlString) => {
     if (!htmlString) return { __html: "" };
-    // Basic conversion for bold and line breaks if the AI didn't send proper HTML
     const formatted = htmlString.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     return { __html: formatted };
+  };
+
+ 
+  const handleTakeQuiz = async () => {
+      if (!selectedLesson) return;
+
+      
+      const baseTopic = selectedLesson.title.replace(' - Master Handout', '').trim();
+      
+      
+      const existingQuiz = quizzes?.find(q => q.title.includes(baseTopic) || baseTopic.includes(q.title.replace(/\s*\(.*?\)\s*/g, '')));
+
+      if (existingQuiz) {
+          
+          setShowModal(false);
+          navigate('/dashboard/quizzes');
+      } else {
+          
+          setIsGeneratingQuiz(true);
+          try {
+              
+              await generateStandaloneQuiz(baseTopic, 5, 'Medium', '');
+              
+              setShowModal(false);
+              navigate('/dashboard/quizzes');
+          } catch (error) {
+              console.error("Failed to auto-generate quiz:", error);
+              alert("Something went wrong while asking Athena to build this quiz.");
+          } finally {
+              setIsGeneratingQuiz(false);
+          }
+      }
   };
 
   return (
@@ -413,16 +448,26 @@ const MyLessons = () => {
           <Modal.Title>{selectedLesson?.title?.replace(' - Master Handout', '')}</Modal.Title>
         </Modal.Header>
         
-        {/* Render the actual AI content securely */}
         <Modal.Body dangerouslySetInnerHTML={createMarkup(selectedLesson?.content)} />
         
         <Modal.Footer>
-          <button className="btn-modal-close" onClick={() => setShowModal(false)}>
+          <button className="btn-modal-close" onClick={() => setShowModal(false)} disabled={isGeneratingQuiz}>
             Close Reader
           </button>
-          <button className="btn-modal-quiz" onClick={() => { setShowModal(false); navigate('/dashboard/quizzes'); }}>
-            Take the Quiz <i className="bi bi-arrow-right"></i>
+          
+          {/*  */}
+          <button 
+            className="btn-modal-quiz" 
+            onClick={handleTakeQuiz}
+            disabled={isGeneratingQuiz}
+          >
+            {isGeneratingQuiz ? (
+                <><Spinner size="sm" className="me-2"/> Generating Quiz...</>
+            ) : (
+                <>Take the Quiz <i className="bi bi-arrow-right"></i></>
+            )}
           </button>
+
         </Modal.Footer>
       </Modal>
     </>
