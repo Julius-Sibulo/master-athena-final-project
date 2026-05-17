@@ -26,7 +26,6 @@ const Dashboard = ({
   
   const [showJumpscare, setShowJumpscare] = useState(false);
 
-  r
   const handleBellClick = () => {
       
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2864/2864-preview.mp3');
