@@ -1,5 +1,5 @@
 import React from 'react';
-import { Row, Col, Carousel } from 'react-bootstrap'; // <--- Added Carousel here
+import { Row, Col, Carousel } from 'react-bootstrap'; 
 import { useOutletContext, useNavigate } from 'react-router-dom';
 
 const styles = `
