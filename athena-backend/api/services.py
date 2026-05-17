@@ -3,7 +3,6 @@ import os
 import logging
 from groq import Groq
 
-
 logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
@@ -19,8 +18,8 @@ def generate_full_lesson(topic):
     STYLE: Use high-level academic language but keep it engaging.
     STRUCTURE:
     - # 📚 {topic.upper()}
-    - ## 🎯 Learning Objectives
-    - ## 💡 Core Concepts (Detailed explanation)
+    - # 🎯 Learning Objectives
+    - ##💡 Core Concepts (Detailed explanation)
     - ## 🧪 Practical Application
     - ## 📝 Summary
     Format everything in beautiful Markdown with emojis.
@@ -41,8 +40,8 @@ def generate_quiz_json(topic, num_questions=5):
     
     prompt = f"""
     Generate a multiple-choice quiz about '{topic}'.
-    RETURN ONLY A VALID JSON ARRAY.
-    SCHEMA: [{{ "question": "string", "options": ["A", "B", "C", "D"], "answer": "The correct option string", "explanation": "Why it's correct" }}]
+    RETURN ONLY A VALID JSON OBJECT.
+    SCHEMA: {{ "questions": [{{ "question": "string", "options": ["A", "B", "C", "D"], "answer": "The correct option string", "explanation": "Why it's correct" }}] }}
     Count: {num_questions} questions.
     """
     try:
@@ -54,33 +53,42 @@ def generate_quiz_json(topic, num_questions=5):
         return response.choices[0].message.content.strip()
     except Exception as e:
         logger.error(f"Quiz Gen Error: {e}")
-        return json.dumps([{"question": "Error", "options": ["N/A"], "answer": "N/A", "explanation": str(e)}])
+        return json.dumps({"questions": [{"question": "Error", "options": ["N/A"], "answer": "N/A", "explanation": str(e)}]})
 
 def get_hint(question, history=None, level=1):
     level = int(level)
     print(f"--- 💬 Athena responding at LEVEL {level} ---")
-
     
     question_lower = question.lower()
     creator_keywords = ["who developed", "who created", "who made you", "who programmed", "who is your creator", "who built you"]
     
     if any(keyword in question_lower for keyword in creator_keywords):
-        # Returns standard Markdown hyperlink format
         return "I was proudly developed by the brilliant [Jose Batumbakal](https://juliussibulo.github.io/Trends-Repository-25-26/Recitation2_Sibulo.html)! 🚀"
     
-    
     level_instructions = {
-        1: "MODE: SOCRATIC TUTOR. Do not give answers. Give a very small nudge or ask a question back. Keep the student thinking.",
-        2: "MODE: CONCEPTUAL GUIDE. Explain the logic and the steps. Provide the formula if needed. DO NOT solve the final step.",
-        3: "MODE: MASTER SOLVER. Provide a full, detailed, step-by-step solution with the final answer clearly stated."
+        1: """MODE: L1 - THE CHALLENGER (Mastery Level). 
+              Assume the student already knows the basics. Your goal is to aggressively test their deep understanding.
+              Act as a Devil's Advocate. Throw complex edge-cases and scenarios at them.
+              Challenge their answers and ask them to defend their logic. Do NOT give direct answers.""",
+              
+        2: """MODE: L2 - THE FEYNMAN GUIDE (Active Recall). 
+              DO NOT simply give the student the answer. 
+              Give a 1-sentence overview, then immediately ask them to explain the concept to you as if you were 12 years old.
+              Find gaps in their logic and ask leading questions to help them realize their mistakes.""",
+              
+        3: """MODE: L3 - THE EXPLAINER (Direct Answer). 
+              Your goal is to provide direct, easy-to-understand answers. 
+              Break complex topics down into small, digestible pieces with real-world examples.
+              Be warm, encouraging, and give the student all the facts they need. Do not ask them to explain things back to you."""
     }
+
+    active_instruction = level_instructions.get(level, level_instructions[3])
 
     messages = [{
         "role": "system", 
-        "content": f"Identity: Athena (AI Tutor). Instruction: {level_instructions.get(level)}\nPersonality: Friendly, uses emojis, and very encouraging."
+        "content": f"Identity: Athena (AI Tutor).\nInstruction: {active_instruction}\nPersonality: Friendly, uses emojis, and very encouraging."
     }]
 
-    # Reconstruct history if it exists
     if history:
         for msg in history:
             role = "assistant" if msg['role'] == "ai" else "user"
@@ -97,4 +105,4 @@ def get_hint(question, history=None, level=1):
         return response.choices[0].message.content
     except Exception as e:
         logger.error(f"Chat API Error: {e}")
-        return "I'm having trouble connecting to my knowledge base right now.  Athena is offline! 🛠️"
+        return "I'm having trouble connecting to my knowledge base right now. Athena is offline! 🛠️"
