@@ -6,23 +6,18 @@ from pathlib import Path
 import dj_database_url
 import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '2$mvgce(&q&anb78%=4$l2it*%615e$cm1n_kr=uz=ti1uc-w4')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# Automatically turns False when running on Render
 DEBUG = 'RENDER' not in os.environ
 
-# THE FIX: Accepts local hosts AND your dynamic Render URL automatically
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# Application definition
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,7 +33,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # THE FIX: Safely serves static assets on Render
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -68,11 +63,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend_core.wsgi.application'
 
 
-# ==============================================================================
-# DATABASE CONFIGURATION (HYBRID LOCAL/PRODUCTION)
-# ==============================================================================
-
-# Your default local PostgreSQL configurations
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -84,13 +74,11 @@ DATABASES = {
     }
 }
 
-# THE FIX: If Render provides a DATABASE_URL environment variable, parse it and overwrite!
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
     DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -106,17 +94,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Manila'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles' # Required directory for whitenoise compilation
+STATIC_ROOT = BASE_DIR / 'staticfiles' 
 
-# Optimization for serving compressed static files
+
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
