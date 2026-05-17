@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import robotImg from '../assets/Welcome.png'; 
 
 const LoginPage = ({ onLogin }) => {
-  // ✨ FIX 1: Set initial state to empty strings so it doesn't default to 'admin'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -55,8 +54,8 @@ const LoginPage = ({ onLogin }) => {
                       <Form.Label className="fw-semibold text-dark">Username<span className="text-danger">*</span></Form.Label>
                       <Form.Control 
                         type="text" 
-                        placeholder="Enter your username" // ✨ FIX 2: Added placeholder
-                        autoComplete="off" // ✨ FIX 3: Tells Chrome to stop autofilling
+                        placeholder="Enter your username" 
+                        autoComplete="off" 
                         className="py-2 px-3 rounded-4 shadow-sm border-light" 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -69,8 +68,8 @@ const LoginPage = ({ onLogin }) => {
                       <Form.Label className="fw-semibold text-dark">Password<span className="text-danger">*</span></Form.Label>
                       <Form.Control 
                         type="password" 
-                        placeholder="Enter your password" // ✨ FIX 2: Added placeholder
-                        autoComplete="new-password" // ✨ FIX 3: The ultimate trick to block password autofill
+                        placeholder="Enter your password" 
+                        autoComplete="new-password" 
                         className="py-2 px-3 rounded-4 shadow-sm border-light" 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

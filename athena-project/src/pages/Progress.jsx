@@ -8,8 +8,8 @@ const styles = `
   .progress-wrapper {
     font-family: 'DM Sans', sans-serif;
     background: #f6f7fb;
-    height: calc(100vh - 110px); /* THE FIX: Locks it to the screen */
-    overflow-y: auto;            /* THE FIX: Internal scroll only */
+    height: calc(100vh - 110px); 
+    overflow-y: auto;            
     padding: 1.5rem 2rem 4rem;
   }
 
@@ -59,6 +59,7 @@ const styles = `
   .stat-icon.indigo { background: rgba(255,255,255,0.18); color: #fff; }
   .stat-icon.purple { background: #eef2ff; color: #4f46e5; }
   .stat-icon.green  { background: #ecfdf5; color: #059669; }
+  .stat-icon.orange { background: #fff7ed; color: #ea580c; } /* Added for new unattempted styling */
 
   .stat-label {
     font-size: 0.8rem;
@@ -150,6 +151,17 @@ const styles = `
     padding: 3px 10px;
     border-radius: 20px;
   }
+  
+  .badge-unattempted {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
 
   .badge-pct {
     font-size: 0.8rem;
@@ -193,6 +205,7 @@ const styles = `
 
   .fill-success { background: linear-gradient(90deg, #34d399, #10b981); }
   .fill-primary { background: linear-gradient(90deg, #818cf8, #4f46e5); }
+  .fill-empty { background: transparent; }
 
   /* --- EXPANDED PANEL --- */
   .expanded-panel {
@@ -324,17 +337,43 @@ const ProgressItem = ({ lesson, quizzes }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
 
-  // Safely grab the topic name and strip out AI formatting
   const baseTopic = lesson.title.replace(' - Master Handout', '');
-  
-  // Find a matching quiz to calculate the progress
   const safeQuizzes = quizzes || [];
-  const matchingQuiz = safeQuizzes.find(q => q.title.includes(baseTopic));
   
-  const progressValue = matchingQuiz?.status === 'Completed' ? 100 : 50;
-  const isMastered = progressValue === 100;
+  
+  const matchingQuizzes = safeQuizzes.filter(q => q.title.includes(baseTopic));
+  
+  
+  let progressValue = 0;
+  let statusText = 'Unattempted';
+  let badgeClass = 'badge-unattempted';
+  let isMastered = false;
 
-  // Strips AI Markdown so the preview looks like clean, normal text
+  if (matchingQuizzes.length > 0) {
+      
+      const highestScoreQuiz = matchingQuizzes.reduce((prev, current) => {
+          return (prev.lastScore > current.lastScore) ? prev : current;
+      });
+
+    
+      if (highestScoreQuiz.status === 'Completed') {
+          progressValue = Math.min(Math.round((highestScoreQuiz.lastScore / 5) * 100), 100); 
+          
+          if (progressValue >= 80) {
+              isMastered = true;
+              statusText = '✓ Mastered';
+              badgeClass = 'badge-mastered';
+          } else {
+              statusText = 'In Progress';
+              badgeClass = 'badge-in-progress';
+          }
+      } else {
+          progressValue = 0;
+          statusText = 'Quiz Ready';
+          badgeClass = 'badge-in-progress'; 
+      }
+  }
+
   const cleanPreviewText = lesson.content 
     ? lesson.content.replace(/[#*`_]/g, '').replace(/<[^>]*>?/gm, '') 
     : "No content available.";
@@ -345,9 +384,7 @@ const ProgressItem = ({ lesson, quizzes }) => {
         <div style={{ flex: 1, paddingRight: '12px' }}>
           <div className="progress-topic-title">{baseTopic}</div>
           <div className="progress-badges">
-            <span className={isMastered ? 'badge-mastered' : 'badge-in-progress'}>
-              {isMastered ? '✓ Mastered' : 'In Progress'}
-            </span>
+            <span className={badgeClass}>{statusText}</span>
             <span className="badge-pct">{progressValue}% complete</span>
           </div>
         </div>
@@ -365,7 +402,7 @@ const ProgressItem = ({ lesson, quizzes }) => {
 
       <div className="custom-progress-track">
         <div
-          className={`custom-progress-fill ${isMastered ? 'fill-success' : 'fill-primary'}`}
+          className={`custom-progress-fill ${isMastered ? 'fill-success' : (progressValue > 0 ? 'fill-primary' : 'fill-empty')}`}
           style={{ width: `${progressValue}%` }}
         />
       </div>
@@ -396,11 +433,14 @@ const Progress = () => {
   const { lessons, quizzes } = useOutletContext();
   const navigate = useNavigate();
 
-  // Safely calculate stats so it doesn't crash if the database is still loading
   const totalLessons = lessons?.length || 0;
   const safeQuizzes = quizzes || [];
-  const completedQuizzes = safeQuizzes.filter(q => q.status === 'Completed').length;
-  const overallAccuracy = safeQuizzes.length > 0 ? Math.round((completedQuizzes / safeQuizzes.length) * 100) : 0;
+  
+  
+  const trulyPassedQuizzes = safeQuizzes.filter(q => q.status === 'Completed' && q.lastScore >= 4).length;
+  
+  
+  const overallAccuracy = totalLessons > 0 ? Math.round((trulyPassedQuizzes / totalLessons) * 100) : 0;
 
   return (
     <>
@@ -440,7 +480,7 @@ const Progress = () => {
               </div>
               <div>
                 <p className="stat-label">Quizzes Passed</p>
-                <div className="stat-value">{completedQuizzes}</div>
+                <div className="stat-value">{trulyPassedQuizzes}</div>
               </div>
             </div>
           </Col>

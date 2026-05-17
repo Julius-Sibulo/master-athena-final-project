@@ -8,7 +8,7 @@ const Settings = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(currentUser?.name || currentUser?.username || '');
-    const [username, setUsername] = useState(currentUser?.username || ''); // NEW: Username state
+    const [username, setUsername] = useState(currentUser?.username || ''); 
     const [email, setEmail] = useState(currentUser?.email || '');
     
     const [isLoading, setIsLoading] = useState(false);
@@ -41,15 +41,20 @@ const Settings = () => {
         setIsLoading(true);
         setStatusMessage(null);
 
+        if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+            setStatusMessage({ type: 'danger', text: 'Please enter a valid email address containing "@".' });
+            setIsLoading(false);
+            return;
+        }
+
         try {
-            // FIXED: Cleaned up the URL typo!
             const response = await fetch('https://master-athena-final-project.onrender.com/api/update-profile/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: currentUser.id,
                     name: newName,
-                    username: newUsername, // NEW: Sending username to backend
+                    username: newUsername, 
                     email: newEmail,
                     bio: currentUser?.bio || '', 
                     avatar: newAvatar
@@ -135,11 +140,12 @@ const Settings = () => {
     };
 
     return (
-        // FIXED: overflow-auto replaces overflow-hidden for smart scrolling
-        <Container fluid className="p-4 overflow-auto" style={{ height: 'calc(100vh - 110px)', backgroundColor: '#fcfcfc' }}>
-            <div className="mx-auto h-100 d-flex flex-column" style={{ maxWidth: '900px' }}>
+
+        <Container fluid className="p-4 overflow-auto pb-5" style={{ height: 'calc(100vh - 110px)', backgroundColor: '#fcfcfc' }}>
+            {/*  */}
+            <div className="mx-auto d-flex flex-column mb-5" style={{ maxWidth: '900px', minHeight: '100%' }}>
                 
-                <div className="d-flex justify-content-between align-items-center mb-3 flex-shrink-0">
+                <div className="d-flex justify-content-between align-items-center mb-3 flex-shrink-0 mt-2">
                     <h2 className="fw-bolder text-dark m-0">Settings</h2>
                     {statusMessage && (
                         <Alert variant={statusMessage.type} onClose={() => setStatusMessage(null)} dismissible className="m-0 py-2 px-3">
@@ -148,12 +154,12 @@ const Settings = () => {
                     )}
                 </div>
 
-                {/* FIXED: overflow-auto allows the inside card to scroll on small screens */}
-                <Card className="border-0 shadow-sm rounded-4 flex-grow-1 overflow-auto">
-                    <Card.Body className="p-4 d-flex flex-column justify-content-between h-100">
+                {/*  */}
+                <Card className="border-0 shadow-sm rounded-4 flex-grow-1 mb-5">
+                    <Card.Body className="p-4 d-flex flex-column h-100">
                         
                         {/* 1. ACCOUNT OVERVIEW */}
-                        <div className="mb-3">
+                        <div className="mb-4">
                             <h5 className="fw-bold text-dark mb-2">Account Overview</h5>
                             <div className="bg-light rounded-4 p-3 d-flex align-items-center border">
                                 <div 
@@ -182,7 +188,7 @@ const Settings = () => {
                         </div>
 
                         {/* 2. PASSWORD & SECURITY */}
-                        <div className="mb-3 pb-3 border-bottom">
+                        <div className="mb-4 pb-4 border-bottom">
                             <div className="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 className="fw-bold text-dark mb-1">Password & Security</h6>
@@ -198,8 +204,8 @@ const Settings = () => {
                         </div>
 
                         {/* 3. PERSONAL INFORMATION */}
-                        <div className="mb-3 pb-3 border-bottom">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div className="mb-4 pb-4 border-bottom">
+                            <div className="d-flex justify-content-between align-items-center mb-4">
                                 <div>
                                     <h6 className="fw-bold text-dark mb-1">Personal Information</h6>
                                     <p className="text-muted m-0">Edit personal details</p>
@@ -215,21 +221,20 @@ const Settings = () => {
                                 )}
                             </div>
 
-                            <Row className="gy-2">
+                            <Row className="gy-3">
                                 <Col sm={4} className="text-muted fw-medium d-flex align-items-center">Full Name</Col>
                                 <Col sm={8}>
                                     {isEditing ? (
-                                        <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} className="bg-light border-0 shadow-none" />
+                                        <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} className="bg-light border-0 shadow-none py-2" />
                                     ) : (
                                         <span className="fw-bold text-dark">{currentUser?.name || currentUser?.username || 'Not set'}</span>
                                     )}
                                 </Col>
 
-                                {/* NEW: Username Row */}
                                 <Col sm={4} className="text-muted fw-medium d-flex align-items-center">Username</Col>
                                 <Col sm={8}>
                                     {isEditing ? (
-                                        <Form.Control type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="bg-light border-0 shadow-none" />
+                                        <Form.Control type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="bg-light border-0 shadow-none py-2" />
                                     ) : (
                                         <span className="fw-bold text-dark">@{currentUser?.username}</span>
                                     )}
@@ -238,7 +243,8 @@ const Settings = () => {
                                 <Col sm={4} className="text-muted fw-medium d-flex align-items-center">Email Address</Col>
                                 <Col sm={8}>
                                     {isEditing ? (
-                                        <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-light border-0 shadow-none" />
+                                        
+                                        <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-light border-0 shadow-none py-2" placeholder="name@example.com" />
                                     ) : (
                                         <span className="fw-bold text-dark">{currentUser?.email || 'Not set'}</span>
                                     )}
@@ -247,9 +253,9 @@ const Settings = () => {
                         </div>
 
                         {/* 4. SESSION HISTORY */}
-                        <div className="mb-3">
+                        <div className="mb-5">
                             <h6 className="fw-bold text-dark mb-1">Session History</h6>
-                            <p className="text-muted mb-2">View previous tutoring sessions</p>
+                            <p className="text-muted mb-3">View previous tutoring sessions</p>
                             
                             <div className="bg-primary bg-opacity-10 rounded-3 p-3 d-flex justify-content-between align-items-center border border-primary border-opacity-25">
                                 <span className="fw-bold text-primary">{lessons?.length || 0} Lessons</span>
@@ -260,7 +266,7 @@ const Settings = () => {
                         </div>
 
                         {/* 5. ABOUT APP & LOGOUT */}
-                        <div className="d-flex justify-content-between align-items-end mt-auto pt-2">
+                        <div className="d-flex justify-content-between align-items-end mt-auto pt-4 pb-2">
                             <div>
                                 <h6 className="fw-bold text-dark mb-1">About App</h6>
                                 <p className="text-muted m-0">

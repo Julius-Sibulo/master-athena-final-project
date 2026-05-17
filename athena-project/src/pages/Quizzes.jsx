@@ -8,8 +8,8 @@ const styles = `
   .quizzes-wrapper {
     font-family: 'DM Sans', sans-serif;
     background: #f6f7fb;
-    height: calc(100vh - 110px); /* THE FIX: Locks it to the screen */
-    overflow-y: auto;            /* THE FIX: Internal scroll only */
+    height: calc(100vh - 110px); 
+    overflow-y: auto;            
     padding: 2.5rem 2rem 4rem;
   }
 
@@ -376,6 +376,11 @@ const styles = `
   }
 `;
 
+
+const shuffleArray = (array) => {
+    return [...array].sort(() => Math.random() - 0.5);
+};
+
 const Quizzes = () => {
     const { quizzes, deleteQuiz, generateStandaloneQuiz, markQuizCompleted } = useOutletContext();
     
@@ -390,17 +395,12 @@ const Quizzes = () => {
     const [showCustomModal, setShowCustomModal] = useState(false);
     const [customTopic, setCustomTopic] = useState('');
     const [customDiff, setCustomDiff] = useState('Medium');
+    const [customCoverage, setCustomCoverage] = useState(''); 
 
-    const checkIsCorrect = (option, idx, answerText) => {
-        if (!answerText) return false;
-        const cleanAnswer = String(answerText).trim().toLowerCase();
-        const cleanOption = String(option).trim().toLowerCase();
-        const letter = String.fromCharCode(65 + idx).toLowerCase(); 
-
-        return cleanOption === cleanAnswer || 
-               letter === cleanAnswer || 
-               cleanAnswer === `${letter}) ${cleanOption}` ||
-               cleanAnswer === `${letter}. ${cleanOption}`;
+    
+    const checkIsCorrect = (option, resolvedAnswerText) => {
+        if (!resolvedAnswerText) return false;
+        return String(option).trim().toLowerCase() === String(resolvedAnswerText).trim().toLowerCase();
     };
 
     const handleStartQuiz = (quiz) => {
@@ -422,7 +422,28 @@ const Quizzes = () => {
             }
 
             if (questionsArray?.length > 0) {
-                setParsedQuestions(questionsArray);
+               
+                const processedQuestions = questionsArray.map(q => {
+                    let exactAnswerText = String(q.answer).trim().toLowerCase();
+                    
+                    if (q.options) {
+                        q.options.forEach((opt, idx) => {
+                            const cleanOpt = String(opt).trim().toLowerCase();
+                            const letter = String.fromCharCode(65 + idx).toLowerCase();
+                            if (cleanOpt === exactAnswerText || letter === exactAnswerText || exactAnswerText === `${letter}) ${cleanOpt}` || exactAnswerText === `${letter}. ${cleanOpt}`) {
+                                exactAnswerText = cleanOpt; 
+                            }
+                        });
+                    }
+
+                    return {
+                        ...q,
+                        resolvedAnswer: exactAnswerText, // Save the bulletproof answer
+                        options: q.options ? shuffleArray([...q.options]) : [] // Jumble the choices!
+                    };
+                });
+
+                setParsedQuestions(processedQuestions);
                 setActiveQuiz(quiz);
                 setCurrentIndex(0);
                 setScore(0);
@@ -436,10 +457,11 @@ const Quizzes = () => {
         }
     };
 
-    const handleAnswerSubmit = (option, idx) => {
+    const handleAnswerSubmit = (option) => {
         setSelectedAnswer(option);
         setTimeout(() => {
-            const isCorrect = checkIsCorrect(option, idx, parsedQuestions[currentIndex].answer);
+            
+            const isCorrect = checkIsCorrect(option, parsedQuestions[currentIndex].resolvedAnswer);
             const finalScore = isCorrect ? score + 1 : score;
             
             if (isCorrect) setScore(p => p + 1);
@@ -464,10 +486,12 @@ const Quizzes = () => {
         if (!customTopic.trim()) return;
         
         setIsGenerating(true);
-        await generateStandaloneQuiz(customTopic, 5, customDiff);
+       
+        await generateStandaloneQuiz(customTopic, 5, customDiff, customCoverage);
         setIsGenerating(false);
         setShowCustomModal(false);
         setCustomTopic('');
+        setCustomCoverage(''); // Reset
     };
 
     const handleRegenerate = async () => {
@@ -515,7 +539,7 @@ const Quizzes = () => {
                                         <h4 className="quiz-card-title">{quiz.title}</h4>
                                     </div>
                                     <p className="quiz-card-desc">
-                                        A 5-question knowledge check to test your understanding of the master handout.
+                                        A knowledge check to test your understanding of the material.
                                     </p>
                                     <div className="quiz-card-footer">
                                         <button className="btn-start-quiz" onClick={() => handleStartQuiz(quiz)}>
@@ -558,6 +582,21 @@ const Quizzes = () => {
                                 required
                             />
                         </Form.Group>
+                        
+                        {/*  */}
+                        <Form.Group className="mb-4">
+                            <Form.Label className="quiz-q-label">COVERAGE / OUTLINE (OPTIONAL)</Form.Label>
+                            <Form.Control 
+                                as="textarea" 
+                                rows={2}
+                                placeholder="e.g. Only cover the Pacific Theater. Do not ask about Europe." 
+                                value={customCoverage}
+                                onChange={(e) => setCustomCoverage(e.target.value)}
+                                className="py-2"
+                                style={{ resize: 'none' }}
+                            />
+                        </Form.Group>
+
                         <Form.Group className="mb-4">
                             <Form.Label className="quiz-q-label">DIFFICULTY</Form.Label>
                             <Form.Select 
@@ -599,7 +638,8 @@ const Quizzes = () => {
                                 {parsedQuestions[currentIndex]?.options?.map((option, idx) => {
                                     let cls = 'quiz-option-btn';
                                     if (selectedAnswer) {
-                                        const isCorrect = checkIsCorrect(option, idx, parsedQuestions[currentIndex].answer);
+                                        
+                                        const isCorrect = checkIsCorrect(option, parsedQuestions[currentIndex].resolvedAnswer);
                                         if (isCorrect) cls += ' correct';
                                         else if (option === selectedAnswer) cls += ' wrong';
                                     }
@@ -607,7 +647,7 @@ const Quizzes = () => {
                                         <button
                                             key={idx}
                                             className={cls}
-                                            onClick={() => !selectedAnswer && handleAnswerSubmit(option, idx)}
+                                            onClick={() => !selectedAnswer && handleAnswerSubmit(option)}
                                             disabled={selectedAnswer !== null}
                                         >
                                             <span className="option-letter">{String.fromCharCode(65 + idx)}</span>
