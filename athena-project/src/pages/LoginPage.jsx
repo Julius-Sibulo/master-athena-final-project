@@ -4,28 +4,24 @@ import { useNavigate, Link } from 'react-router-dom';
 import robotImg from '../assets/Welcome.png'; 
 
 const LoginPage = ({ onLogin }) => {
-  // Prototype credentials - switched to empty strings for better testing, 
-  // but you can put 'admin' back if you prefer!
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin');
+  // ✨ FIX 1: Set initial state to empty strings so it doesn't default to 'admin'
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    // 1. Prevent the page from refreshing (the "going back" bug)
     if (e) e.preventDefault();
     
     setError('');
     setIsSubmitting(true);
 
     try {
-      // 2. We MUST "await" the login because it's talking to your Django server
       const success = await onLogin(username, password);
       
       if (success) {
-        // 3. Navigate to the nested home route
         navigate('/dashboard/home');
       } else {
         setError("Invalid credentials! Please try again.");
@@ -59,6 +55,8 @@ const LoginPage = ({ onLogin }) => {
                       <Form.Label className="fw-semibold text-dark">Username<span className="text-danger">*</span></Form.Label>
                       <Form.Control 
                         type="text" 
+                        placeholder="Enter your username" // ✨ FIX 2: Added placeholder
+                        autoComplete="off" // ✨ FIX 3: Tells Chrome to stop autofilling
                         className="py-2 px-3 rounded-4 shadow-sm border-light" 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -71,6 +69,8 @@ const LoginPage = ({ onLogin }) => {
                       <Form.Label className="fw-semibold text-dark">Password<span className="text-danger">*</span></Form.Label>
                       <Form.Control 
                         type="password" 
+                        placeholder="Enter your password" // ✨ FIX 2: Added placeholder
+                        autoComplete="new-password" // ✨ FIX 3: The ultimate trick to block password autofill
                         className="py-2 px-3 rounded-4 shadow-sm border-light" 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
