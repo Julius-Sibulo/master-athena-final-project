@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Spinner } from 'react-bootstrap'; 
 import { useNavigate, Link } from 'react-router-dom';
-import Swal from 'sweetalert2'; // ✨ 1. IMPORT THE GLOW-UP POPUP
+import Swal from 'sweetalert2'; 
 import robotImg from '../assets/Welcome.png'; 
 
 const SignupPage = () => {
@@ -9,10 +9,13 @@ const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  
+  const [isLoading, setIsLoading] = useState(false); 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); 
     
     try {
       const response = await fetch('https://master-athena-final-project.onrender.com/api/register/', {
@@ -24,21 +27,19 @@ const SignupPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // ✨ 2. BEAUTIFUL SUCCESS POPUP
         Swal.fire({
           title: 'Account Created!',
           text: 'Welcome to Athena! You can now log in.',
           icon: 'success',
           confirmButtonColor: '#135cce',
           customClass: {
-            popup: 'rounded-5' // Matches your card corners!
+            popup: 'rounded-5' 
           }
         }).then(() => {
           navigate('/login'); 
         });
 
       } else {
-        // ✨ 3. BEAUTIFUL ERROR POPUP
         Swal.fire({
           title: 'Oops...',
           text: data.error || "Something went wrong. Username might be taken.",
@@ -48,18 +49,18 @@ const SignupPage = () => {
       }
     } catch (error) {
       console.error("Registration error:", error);
-      // ✨ 4. BEAUTIFUL SERVER ERROR POPUP
       Swal.fire({
         title: 'Connection Error',
         text: 'Failed to connect to the server.',
         icon: 'warning',
         confirmButtonColor: '#135cce'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    // ... rest of your UI remains exactly the same!
     <div className="vh-100 d-flex align-items-center justify-content-center bg-light" style={{ overflow: 'hidden' }}>
       <Container>
         <Row className="justify-content-center">
@@ -93,8 +94,18 @@ const SignupPage = () => {
                       <Form.Control type="password" className="py-2 px-3 rounded-4 shadow-sm border-light" value={password} onChange={(e) => setPassword(e.target.value)} required />
                     </Form.Group>
 
-                    <Button variant="primary" type="submit" className="w-100 py-3 rounded-pill fw-bold shadow-sm mb-4">
-                      Create Account
+                    {/* THE SMART BUTTON */}
+                    <Button 
+                      variant="primary" 
+                      type="submit" 
+                      className="w-100 py-3 rounded-pill fw-bold shadow-sm mb-4"
+                      disabled={isLoading} // Disables the button so they can't double-click
+                    >
+                      {isLoading ? (
+                        <><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" /> Connecting to Server...</>
+                      ) : (
+                        'Create Account'
+                      )}
                     </Button>
                     
                     <div className="text-center mb-2">
