@@ -18,8 +18,8 @@ def generate_full_lesson(topic):
     STYLE: Use high-level academic language but keep it engaging.
     STRUCTURE:
     - # 📚 {topic.upper()}
-    - # 🎯 Learning Objectives
-    - ##💡 Core Concepts (Detailed explanation)
+    - ## 🎯 Learning Objectives
+    - ## 💡 Core Concepts (Detailed explanation)
     - ## 🧪 Practical Application
     - ## 📝 Summary
     Format everything in beautiful Markdown with emojis.

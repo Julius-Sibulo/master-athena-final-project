@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Spinner } from 'react-bootstrap'; 
+import { Container, Row, Col, Card, Form, Button, Spinner } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2'; 
 import robotImg from '../assets/Welcome.png'; 
 
 const SignupPage = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  
   const [isLoading, setIsLoading] = useState(false); 
   const navigate = useNavigate();
 
@@ -21,7 +21,13 @@ const SignupPage = () => {
       const response = await fetch('https://master-athena-final-project.onrender.com/api/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, name })
+        body: JSON.stringify({ 
+            username, 
+            email, 
+            password, 
+            first_name: firstName, 
+            last_name: lastName 
+        })
       });
 
       const data = await response.json();
@@ -32,9 +38,7 @@ const SignupPage = () => {
           text: 'Welcome to Athena! You can now log in.',
           icon: 'success',
           confirmButtonColor: '#135cce',
-          customClass: {
-            popup: 'rounded-5' 
-          }
+          customClass: { popup: 'rounded-5' }
         }).then(() => {
           navigate('/login'); 
         });
@@ -74,10 +78,22 @@ const SignupPage = () => {
                   </div>
 
                   <Form onSubmit={handleSubmit} className="px-sm-4">
-                    <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold text-dark">Full Name<span className="text-danger">*</span></Form.Label>
-                      <Form.Control type="text" className="py-2 px-3 rounded-4 shadow-sm border-light" value={name} onChange={(e) => setName(e.target.value)} required />
-                    </Form.Group>
+                    
+                    {/* Side-by-side First and Last Name Inputs */}
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold text-dark">First Name<span className="text-danger">*</span></Form.Label>
+                          <Form.Control type="text" className="py-2 px-3 rounded-4 shadow-sm border-light" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold text-dark">Last Name<span className="text-danger">*</span></Form.Label>
+                          <Form.Control type="text" className="py-2 px-3 rounded-4 shadow-sm border-light" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                        </Form.Group>
+                      </Col>
+                    </Row>
 
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold text-dark">Username<span className="text-danger">*</span></Form.Label>
@@ -94,13 +110,7 @@ const SignupPage = () => {
                       <Form.Control type="password" className="py-2 px-3 rounded-4 shadow-sm border-light" value={password} onChange={(e) => setPassword(e.target.value)} required />
                     </Form.Group>
 
-                    {/* THE SMART BUTTON */}
-                    <Button 
-                      variant="primary" 
-                      type="submit" 
-                      className="w-100 py-3 rounded-pill fw-bold shadow-sm mb-4"
-                      disabled={isLoading} // Disables the button so they can't double-click
-                    >
+                    <Button variant="primary" type="submit" className="w-100 py-3 rounded-pill fw-bold shadow-sm mb-4" disabled={isLoading}>
                       {isLoading ? (
                         <><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" /> Connecting to Server...</>
                       ) : (
@@ -117,12 +127,7 @@ const SignupPage = () => {
                 </Col>
 
                 <Col md={6} className="d-none d-md-flex align-items-center justify-content-center" style={{ backgroundColor: '#135cce', minHeight: '500px' }}>
-                  <img 
-                    src={robotImg} 
-                    alt="Athena Robot" 
-                    className="img-fluid p-5" 
-                    style={{ maxHeight: '100%', objectFit: 'contain', animation: 'float 3s ease-in-out infinite' }} 
-                  />
+                  <img src={robotImg} alt="Athena Robot" className="img-fluid p-5" style={{ maxHeight: '100%', objectFit: 'contain', animation: 'float 3s ease-in-out infinite' }} />
                 </Col>
               </Row>
             </Card>

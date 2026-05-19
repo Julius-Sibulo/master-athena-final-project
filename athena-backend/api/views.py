@@ -1,6 +1,6 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login 
 from django.contrib.auth.models import User
 from .models import Lesson, Quiz, Conversation, Message, UserProfile
 from .serializers import LessonSerializer, QuizSerializer
@@ -29,7 +29,10 @@ def register_user(request):
     username = request.data.get('username')
     email = request.data.get('email')
     password = request.data.get('password')
-    name = request.data.get('name', '')
+    
+    
+    first_name = request.data.get('first_name', '')
+    last_name = request.data.get('last_name', '')
 
     if User.objects.filter(username=username).exists():
         return Response({"error": "That username is already taken!"}, status=400)
@@ -37,7 +40,14 @@ def register_user(request):
     if len(password) < 6:
         return Response({"error": "Password must be at least 6 characters."})
 
-    user = User.objects.create_user(username=username, email=email, password=password, first_name=name)
+
+    user = User.objects.create_user(
+        username=username, 
+        email=email, 
+        password=password, 
+        first_name=first_name, 
+        last_name=last_name
+    )
     UserProfile.objects.create(user=user) 
     return Response({"message": "User created successfully!", "id": user.id})
 
@@ -49,11 +59,20 @@ def login_user(request):
     user = authenticate(username=username, password=password)
 
     if user is not None:
+       
+        login(request, user)
+
         profile, _ = UserProfile.objects.get_or_create(user=user)
+        
+        
+        full_name = user.get_full_name()
+        if not full_name.strip():
+            full_name = user.username
+
         return Response({
             "id": user.id,
             "username": user.username,
-            "name": user.first_name or user.username,
+            "name": full_name, # ✨ Hands React the combined Full Name!
             "email": user.email,
             "streak": profile.streak,
             "bio": profile.bio,
@@ -120,7 +139,7 @@ def generate_quiz(request):
     
     user = User.objects.get(id=user_id)
     
-    # Send the difficulty level securely to the AI prompt
+
     smart_topic = f"{topic} (Create questions at a {difficulty} difficulty level)"
     
     ai_questions = generate_quiz_json(smart_topic, num_questions=num_questions)
@@ -188,7 +207,6 @@ def ask_athena(request):
         return Response({"error": "Backend crashed! Check the Django terminal."}, status=500)
 
 
-
 @api_view(['DELETE'])
 def delete_conversation(request, conversation_id):
     try:
@@ -217,22 +235,23 @@ def delete_quiz(request, quiz_id):
         return Response({"error": "Quiz not found."}, status=404)
 
 
-
 @api_view(['POST'])
 def update_profile(request):
     try:
         user_id = request.data.get('user_id')
         user = User.objects.get(id=user_id)
 
-        
         new_username = request.data.get('username', user.username)
-        
         
         if new_username != user.username and User.objects.filter(username=new_username).exists():
             return Response({"error": "That username is already taken!"}, status=400)
             
         user.username = new_username
-        user.first_name = request.data.get('name', user.first_name)
+        
+        
+        user.first_name = request.data.get('first_name', user.first_name)
+        user.last_name = request.data.get('last_name', user.last_name)
+        
         user.email = request.data.get('email', user.email)
         user.save()
 
@@ -240,10 +259,15 @@ def update_profile(request):
         profile.bio = request.data.get('bio', profile.bio)
         profile.avatar = request.data.get('avatar', profile.avatar) 
         profile.save()
+        
+        # Fallback for name display
+        full_name = user.get_full_name()
+        if not full_name.strip():
+            full_name = user.username
 
         return Response({
             "message": "Profile saved permanently!",
-            "name": user.first_name,
+            "name": full_name,
             "username": user.username,
             "avatar": profile.avatar,
             "bio": profile.bio
@@ -272,7 +296,6 @@ def change_password(request):
         return Response({"error": "User not found."}, status=404)
     except Exception as e:
         return Response({"error": "An error occurred while changing password."}, status=500)
-
 
 
 @api_view(['POST'])
